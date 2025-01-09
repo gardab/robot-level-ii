@@ -16,13 +16,20 @@ def order_robots_from_RobotSpareBin():
     browser.configure(
         slowmo=100,
     )
+    # Downloads the csv with orders details
     robot_orders = get_orders()
     open_robot_order_website()
-    close_annoying_modal()
+    number_of_orders = robot_orders.size
+    # Fill the form with order details for each robot in the csv and submits the form
     for order in robot_orders:
+        # Closes the popup
+        close_annoying_modal()
+        # Fills and submits the form
         fill_the_form(order)
-    
-    
+        # If there are still more orders, it clicks on the 'order another robot' button and continues
+        if number_of_orders > int(order['Order number']):
+            order_another_robot()
+             
 def open_robot_order_website():
     """Navigates to the given URL"""
     browser.goto("https://robotsparebinindustries.com/#/robot-order")
@@ -51,5 +58,15 @@ def fill_the_form(order):
     page.check(f"#id-body-{order['Body']}")
     page.fill("input[placeholder='Enter the part number for the legs']", order['Legs'])
     page.fill("#address", order['Address'])
-    page.click("text=Preview")
-    page.click("text=ORDER")
+    page.click("button:text('Preview')")
+    page.click("button:text('order')")
+    # If there is an error message retries submitting the form
+    while page.is_visible("//*[@class='alert alert-danger']"):
+        page.click("button:text('order')")
+    
+def order_another_robot():
+    page = browser.page()
+    while page.is_visible("//*[@class='alert alert-success']"):
+        page.click("button:text('Order another robot')")
+        
+        
